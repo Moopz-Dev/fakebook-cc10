@@ -14,38 +14,41 @@ exports.register = async (req, res, next) => {
 			lastName,
 		} = req.body;
 
-		if (password !== confirmPassword)
-			res
+		if (password !== confirmPassword) {
+			return res
 				.status(400)
 				.json({ message: "password and confirm password didn't match" });
+		}
 
 		const isEmail = emailOrPhoneNumber.match(emailRegex);
 		if (isEmail) {
 			const existUser = await User.findOne({
 				where: { email: emailOrPhoneNumber },
 			});
-			if (existUser)
-				res.status(400).json({ message: "this email is already in use" });
-			else {
+			if (existUser) {
+				return res
+					.status(400)
+					.json({ message: "this email is already in use" });
+			} else {
 				const existUser = await User.findOne({
 					where: { phoneNumber: emailOrPhoneNumber },
 				});
-				if (existUser)
-					res
+				if (existUser) {
+					return res
 						.status(400)
 						.json({ message: "this phone number is already in use" });
+				}
 			}
 		}
 		const hashedPassword = await bcrypt.hash(password, 10);
 		await User.create({
 			firstName,
 			lastName,
-			password,
 			email: isEmail ? emailOrPhoneNumber : null,
 			phoneNumber: !isEmail ? emailOrPhoneNumber : null,
 			password: hashedPassword,
 		});
-		res.status(201).json({ message: "user created" });
+		return res.status(201).json({ message: "user created" });
 	} catch (err) {
 		next(err);
 	}
@@ -61,15 +64,17 @@ exports.login = async (req, res, next) => {
 		} else {
 			user = await User.findOne({ where: { phoneNumber: emailOrPhoneNumber } });
 		}
-		if (!user)
-			res
+		if (!user) {
+			return res
 				.status(400)
 				.json({ message: "invalid email, phone number or password" });
+		}
 		const isMatch = await bcrypt.compare(password, user.password);
-		if (!isMatch)
-			res
+		if (!isMatch) {
+			return res
 				.status(400)
 				.json({ message: "invalid email, phone number or password" });
+		}
 		const payload = {
 			id: user.id,
 			firstName: user.firstName,
@@ -78,7 +83,7 @@ exports.login = async (req, res, next) => {
 		const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
 			expiresIn: 60 * 60 * 24 * 30 * 1000,
 		});
-		res.status(200).json({ token });
+		return res.status(200).json({ token });
 	} catch (err) {
 		next(err);
 	}

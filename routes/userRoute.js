@@ -11,8 +11,8 @@ router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.patch(
 	"/profile-img",
-	authenticate,
-	upload.single("profileImg"),
+	authenticate, //req.user
+	upload.single("profileImg"), //req.file
 	userController.updateProfileImg
 );
 
