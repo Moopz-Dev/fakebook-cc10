@@ -21,7 +21,6 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
 	res.status(500).json({ message: err.message });
 });
-//
 
 // virtual server listener
 const port = process.env.PORT || "8080";
