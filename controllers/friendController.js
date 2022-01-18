@@ -1,13 +1,19 @@
 const { Friend, User } = require("../models");
 const { Op } = require("sequelize");
-const { request } = require("express");
+const friend = require("../models/friend");
 
 exports.getAllFriends = async (req, res, next) => {
 	try {
+		const { status, searchName } = req.query;
+		const where = {};
+		if (status) {
+			where.status = status;
+		}
+
 		const friends = await Friend.findAll({
 			where: {
+				...where,
 				[Op.or]: [{ requestToId: req.user.id }, { requestFromId: req.user.id }],
-				status: "ACCEPTED",
 			},
 		});
 		const friendIds = friends.reduce((acc, item) => {
@@ -19,8 +25,29 @@ exports.getAllFriends = async (req, res, next) => {
 			return acc;
 		}, []);
 
+		let userWhere = {};
+		if (searchName) {
+			userWhere = {
+				[Op.or]: [
+					{
+						firstName: {
+							[Op.substring]: searchName,
+						},
+					},
+					{
+						lastName: {
+							[Op.substring]: searchName,
+						},
+					},
+				],
+			};
+		}
+		// SELECT * FROM user WHERE id IN (friendIds) AND (firstName LIKE '%searchName% OR lastName LIKE '%searchName%')
 		const users = await User.findAll({
-			where: { id: friendIds },
+			where: {
+				id: friendIds,
+				...userWhere,
+			},
 			attributes: { exclude: ["password"] },
 		});
 		res.status(200).json({ users });
@@ -80,6 +107,28 @@ exports.updateFriend = async (req, res, next) => {
 		}
 		await Friend.update({ status: "ACCEPTED" }, { where: { id: friendId } });
 		res.status(200).json({ message: "friend request accepted" });
+	} catch (error) {
+		next(error);
+	}
+};
+
+exports.deleteFriend = async (req, res, next) => {
+	try {
+		const { friendId } = req.params;
+		const friend = await Friend.findOne({ where: { id: friendId } });
+		if (!friend) {
+			return res.status(400).json({ message: "this friend request not found" });
+		}
+		if (
+			friend.requestFromId !== req.user.id &&
+			friend.requestToId !== req.user.id
+		) {
+			return res
+				.status(403)
+				.json({ message: "cannot delete this friend request" });
+		}
+		await Friend.destroy({ where: { id: friendId } });
+		res.status(204).json();
 	} catch (error) {
 		next(error);
 	}
