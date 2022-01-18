@@ -4,6 +4,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const userRoute = require("./routes/userRoute");
+const friendRoute = require("./routes/friendRoute");
 
 //app & library init
 const app = express();
@@ -14,6 +15,7 @@ app.use(morgan("tiny"));
 
 //routes
 app.use("/users", userRoute);
+app.use("/friends", friendRoute);
 
 // error handling middlewares
 app.use((req, res) => {

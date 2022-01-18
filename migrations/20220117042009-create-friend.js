@@ -29,7 +29,7 @@ module.exports = {
 					},
 				},
 			},
-			request_to_id: {
+			request_from_id: {
 				type: Sequelize.INTEGER,
 				allowNull: false,
 				references: {
