@@ -83,7 +83,13 @@ exports.login = async (req, res, next) => {
 		const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
 			expiresIn: 60 * 60 * 24 * 30 * 1000,
 		});
-		return res.status(200).json({ token });
+
+		const { id, firstName, lastName, profileImg, email, phoneNumber } = user;
+
+		return res.status(200).json({
+			token,
+			user: { id, firstName, lastName, profileImg, email, phoneNumber },
+		});
 	} catch (err) {
 		next(err);
 	}

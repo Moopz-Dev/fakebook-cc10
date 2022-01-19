@@ -21,6 +21,16 @@ exports.updateProfileImg = (req, res, next) => {
 		}
 
 		fs.unlinkSync(req.file.path);
-		res.json({ message: "upload profile pic successful" });
+		res.json({
+			message: "upload profile pic successful",
+			profileImg: result.secure_url,
+		});
+	});
+};
+
+exports.getMe = (req, res, next) => {
+	const { id, firstName, lastName, profileImg, email, phoneNumber } = req.user;
+	res.status(200).json({
+		user: { id, firstName, lastName, profileImg, email, phoneNumber },
 	});
 };
